@@ -1,0 +1,7 @@
+{
+  "name": "Sénégal État Civil - Gestion des Naissances",
+  "description": "Application complète de gestion des actes de naissance pour l'état civil sénégalais, incluant le workflow de validation, la signature numérique et la génération de documents sécurisés.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}

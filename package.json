@@ -1,0 +1,35 @@
+{
+  "name": "sénégal-état-civil---gestion-des-naissances",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "cypress:open": "cypress open",
+    "cypress:run": "cypress run",
+    "cypress:run:headed": "cypress run --headed",
+    "test:e2e": "cypress run",
+    "test:e2e:ci": "cypress run --record"
+  },
+  "dependencies": {
+    "@tailwindcss/vite": "^4.1.18",
+    "jspdf": "^3.0.4",
+    "lucide-react": "^0.562.0",
+    "minio": "^8.0.6",
+    "qrcode": "^1.5.3",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "recharts": "^3.6.0",
+    "tailwindcss": "^4.1.18"
+  },
+  "devDependencies": {
+    "@types/cypress": "^0.1.6",
+    "@types/node": "^22.14.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "cypress": "^15.8.1",
+    "typescript": "~5.8.2",
+    "vite": "^6.2.0"
+  }
+}
