@@ -1,11 +1,11 @@
 // ============================================
-// FICHIER: server/src/middleware/validate.ts
+// FICHIER: backend/src/middleware/validate.ts
 // DESCRIPTION: Middleware de validation Zod
-// VERSION: 1.0.0 - SEC-003 Correction
+// VERSION: 1.1.0 - Compatible Zod 4
 // ============================================
 
 import { Request, Response, NextFunction } from 'express';
-import { ZodSchema, ZodError } from 'zod';
+import { ZodSchema, ZodError, ZodIssue } from 'zod';
 
 // ============================================
 // TYPES
@@ -29,12 +29,13 @@ export interface ValidatedRequest<TBody = any, TParams = any, TQuery = any> exte
 
 /**
  * Formate les erreurs Zod en format utilisable
+ * Note: Zod 4 utilise 'issues' au lieu de 'errors'
  */
 function formatZodErrors(error: ZodError): ValidationError[] {
-  return error.errors.map(err => ({
-    field: err.path.join('.') || 'unknown',
-    message: err.message,
-    code: err.code
+  return error.issues.map((issue: ZodIssue) => ({
+    field: issue.path.join('.') || 'unknown',
+    message: issue.message,
+    code: issue.code
   }));
 }
 
@@ -302,9 +303,9 @@ export function rateLimit(options: {
   return (req: Request, res: Response, next: NextFunction) => {
     const key = keyGenerator(req);
     const now = Date.now();
-    
+
     let record = validationAttempts.get(key);
-    
+
     if (!record || record.resetAt < now) {
       record = { count: 0, resetAt: now + windowMs };
       validationAttempts.set(key, record);

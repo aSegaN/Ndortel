@@ -1,15 +1,15 @@
-
+// frontend/views/UserGuide.tsx
 import React from 'react';
 import { useApp } from '../context/AppContext';
 import { Role } from '../types';
-import { 
-  BookOpen, 
-  ShieldCheck, 
-  FileText, 
-  Users, 
-  CheckCircle2, 
-  AlertTriangle, 
-  Zap, 
+import {
+  BookOpen,
+  ShieldCheck,
+  FileText,
+  Users,
+  CheckCircle2,
+  AlertTriangle,
+  Zap,
   Fingerprint,
   Info,
   ChevronRight,

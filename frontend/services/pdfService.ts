@@ -1,4 +1,4 @@
-
+// frontend/services/pdfService.ts
 import { jsPDF } from 'jspdf';
 import QRCode from 'qrcode';
 import { BirthCertificate, CertificateStatus, Center } from '../types';
@@ -23,7 +23,7 @@ const numberToFrenchWords = (n: number): string => {
   const tens = ['', 'DIX', 'VINGT', 'TRENTE', 'QUARANTE', 'CINQUANTE', 'SOIXANTE', 'SOIXANTE-DIX', 'QUATRE-VINGTS', 'QUATRE-VINGT-DIX'];
 
   if (n === 0) return 'ZÉRO';
-  
+
   let res = '';
 
   if (n >= 1000) {
@@ -64,11 +64,11 @@ const numberToFrenchWords = (n: number): string => {
  */
 const drawSecurityBackground = (doc: jsPDF, w: number, h: number) => {
   doc.saveGraphicsState();
-  doc.setTextColor(248, 248, 248); 
+  doc.setTextColor(248, 248, 248);
   doc.setFontSize(4.5);
   doc.setFont("times", "italic");
   const text = "NDORTEL - RÉPUBLIQUE DU SÉNÉGAL";
-  
+
   for (let y = 15; y < h; y += 55) {
     for (let x = 10; x < w; x += 110) {
       doc.text(text, x, y, { angle: -35 });
@@ -116,7 +116,7 @@ const drawHeaderSection = (doc: jsPDF, w: number, center?: Center) => {
   doc.text(`RÉGION : ${center?.region.toUpperCase() || "DAKAR"}`, leftX, y); y += 9;
   doc.text(`DÉPARTEMENT : ${center?.department.toUpperCase() || "DAKAR"}`, leftX, y); y += 9;
   doc.text(`ARRONDISSEMENT : ${center?.arrondissement?.toUpperCase() || "DAKAR PLATEAU"}`, leftX, y); y += 11;
-  
+
   doc.setFontSize(7.5);
   doc.text("COLLECTIVITÉ LOCALE", midX / 2 + MARGINS.left, y - 4, { align: 'center' });
   doc.text("(Commune ou Communauté Rurale)", midX / 2 + MARGINS.left, y, { align: 'center' });
@@ -138,12 +138,12 @@ const drawHeaderSection = (doc: jsPDF, w: number, center?: Center) => {
   doc.setFontSize(24);
   doc.setFont("times", "bold");
   doc.text("ÉTAT CIVIL", rightCenterX, y, { align: 'center' }); y += 9;
-  
+
   doc.setFontSize(9);
   doc.setFont("times", "normal");
   doc.text("CENTRE DE (!)", rightCenterX, y, { align: 'center' }); y += 5;
   doc.line(rightCenterX - 20, y, rightCenterX + 20, y);
-  
+
   if (center) {
     doc.setFont("times", "bold");
     doc.text(center.name.toUpperCase(), rightCenterX, y + 6, { align: 'center' });
@@ -165,7 +165,7 @@ const drawTitleSection = (doc: jsPDF, w: number, certificate: BirthCertificate, 
   doc.setFont("times", "bold");
   doc.setFontSize(14);
   doc.text("EXTRAIT DU REGISTRE DES ACTES DE NAISSANCE", MARGINS.left + 5, yStart + 10);
-  
+
   if (isCopy) {
     doc.setFontSize(8);
     doc.setTextColor(150, 0, 0);
@@ -178,17 +178,17 @@ const drawTitleSection = (doc: jsPDF, w: number, certificate: BirthCertificate, 
   let y = yStart + 23;
   const year = certificate.registrationYear;
   const yearInWords = numberToFrenchWords(year);
-  
+
   doc.text("Pour l'année (2) ", MARGINS.left + 5, y);
   doc.setDrawColor(COLORS.formLines);
   doc.line(MARGINS.left + 35, y + 0.5, MARGINS.left + 140, y + 0.5);
   doc.setFont("times", "bold");
   doc.text(yearInWords, MARGINS.left + 87.5, y, { align: 'center' });
-  
+
   y += 13;
   const seqNumStr = certificate.registrationNumber.split('-').pop() || '0';
   const seqInWords = numberToFrenchWords(parseInt(seqNumStr, 10));
-  
+
   doc.setFont("times", "normal");
   doc.text("N° dans le Registre ", MARGINS.left + 5, y);
   doc.line(MARGINS.left + 40, y + 0.5, MARGINS.left + 140, y + 0.5);
@@ -202,11 +202,11 @@ const drawTitleSection = (doc: jsPDF, w: number, certificate: BirthCertificate, 
   doc.setFontSize(11);
   doc.text(`AN - ${year}`, centerX, yStart + 15, { align: 'center' });
   doc.line(rightColumnX, yStart + 26, w - MARGINS.right, yStart + 26);
-  
+
   doc.setFontSize(7);
   doc.text("N° dans le Registre", centerX, yStart + 31, { align: 'center' });
   doc.text("en chiffres", centerX, yStart + 34, { align: 'center' });
-  
+
   doc.setFontSize(15);
   doc.setFont("courier", "bold");
   doc.text(seqNumStr, centerX, yStart + 40, { align: 'center' });
@@ -229,8 +229,8 @@ const drawBodyNarrative = (doc: jsPDF, w: number, certificate: BirthCertificate)
   const yearInLetters = numberToFrenchWords(bDate.getFullYear());
 
   let y = yStart + 10;
-  doc.text(`Le ${dayInLetters} ${monthName} Année ${yearInLetters}`, contentX, y); 
-  
+  doc.text(`Le ${dayInLetters} ${monthName} Année ${yearInLetters}`, contentX, y);
+
   y += 10;
   const [hours, minutes] = certificate.birthTime.split(':');
   const hWord = numberToFrenchWords(parseInt(hours || '0'));
@@ -247,7 +247,7 @@ const drawBodyNarrative = (doc: jsPDF, w: number, certificate: BirthCertificate)
   doc.text(certificate.birthPlace.toUpperCase(), w - 37.5, lieuBoxY + 7, { align: 'center' });
   doc.setFont("times", "normal");
 
-  y += 15; 
+  y += 15;
   doc.text(`un enfant de sexe`, contentX, y);
   const genderX = contentX + 110;
   doc.setFontSize(11);
@@ -313,15 +313,15 @@ const drawBodyNarrative = (doc: jsPDF, w: number, certificate: BirthCertificate)
  * Section Jugement Supplétif
  */
 const drawJudgmentSection = (doc: jsPDF, w: number, certificate: BirthCertificate) => {
-  const yStart = 205; 
-  const h = 40; 
+  const yStart = 205;
+  const h = 40;
   const verticalBarWidth = 8;
   const contentStart = MARGINS.left + verticalBarWidth;
-  
+
   doc.setLineWidth(0.4);
   doc.line(contentStart, yStart, contentStart, yStart + h);
   doc.line(MARGINS.left, yStart + h, w - MARGINS.right, yStart + h);
-  
+
   doc.setFontSize(4.5);
   doc.setFont("times", "bold");
   const verticalText = "JUGEMENT D'AUTORISATION D'INSCRIPTION (EX. JUGEMENT SUPPLÉTIF)";
@@ -329,65 +329,65 @@ const drawJudgmentSection = (doc: jsPDF, w: number, certificate: BirthCertificat
 
   doc.setFont("times", "normal");
   doc.setFontSize(8.5);
-  
+
   let y = yStart + 7;
   doc.text(`Délivré par le tribunal d'instance de : ............................................................................`, contentStart + 3, y);
   if (certificate.judgmentCourt) {
-      doc.setFont("times", "bold");
-      doc.text(certificate.judgmentCourt.toUpperCase(), contentStart + 48, y);
-      doc.setFont("times", "normal");
+    doc.setFont("times", "bold");
+    doc.text(certificate.judgmentCourt.toUpperCase(), contentStart + 48, y);
+    doc.setFont("times", "normal");
   }
-  
+
   y += 10;
   doc.text(`Le ................................................................................................................................`, contentStart + 3, y);
   if (certificate.judgmentDate) {
-      const jd = new Date(certificate.judgmentDate);
-      const dayW = numberToFrenchWords(jd.getDate());
-      const monthW = jd.toLocaleDateString('fr-FR', { month: 'long' }).toUpperCase();
-      const yearW = numberToFrenchWords(jd.getFullYear());
-      doc.setFont("times", "bold");
-      doc.text(`${dayW} ${monthW} ${yearW}`, contentStart + 10, y);
-      doc.setFont("times", "normal");
+    const jd = new Date(certificate.judgmentDate);
+    const dayW = numberToFrenchWords(jd.getDate());
+    const monthW = jd.toLocaleDateString('fr-FR', { month: 'long' }).toUpperCase();
+    const yearW = numberToFrenchWords(jd.getFullYear());
+    doc.setFont("times", "bold");
+    doc.text(`${dayW} ${monthW} ${yearW}`, contentStart + 10, y);
+    doc.setFont("times", "normal");
   }
   doc.setFontSize(6);
   doc.text(`(en lettres)`, contentStart + 60, y + 3.5, { align: 'center' });
-  
+
   y += 9;
   doc.setFontSize(8.5);
   doc.text(`Sous le numéro : ............................................................................................................`, contentStart + 3, y);
   if (certificate.judgmentNumber) {
-      const numW = numberToFrenchWords(parseInt(certificate.judgmentNumber));
-      doc.setFont("times", "bold");
-      doc.text(numW, contentStart + 25, y);
-      doc.setFont("times", "normal");
+    const numW = numberToFrenchWords(parseInt(certificate.judgmentNumber));
+    doc.setFont("times", "bold");
+    doc.text(numW, contentStart + 25, y);
+    doc.setFont("times", "normal");
   }
   doc.setFontSize(6);
   doc.text(`(en lettres)`, contentStart + 60, y + 3.5, { align: 'center' });
-  
+
   y += 9;
   doc.setFontSize(8.5);
   doc.text(`Inscrit le .................................... sur le Registre des Actes de Naissance de l'année`, contentStart + 3, y);
-  
+
   const rightColumnX = w - 45;
   doc.setLineWidth(0.4);
   doc.line(rightColumnX, yStart, rightColumnX, yStart + h);
-  
+
   doc.setFontSize(8);
   const jYear = certificate.judgmentDate ? new Date(certificate.judgmentDate).getFullYear() : "20...";
   doc.text(`AN - ${jYear}`, rightColumnX + 22.5, yStart + 8, { align: 'center' });
   doc.line(rightColumnX, yStart + 12, w - MARGINS.right, yStart + 12);
-  
+
   doc.setFontSize(6.5);
   doc.text("N° dans le registre", rightColumnX + 22.5, yStart + 17, { align: 'center' });
   doc.text("en chiffres", rightColumnX + 22.5, yStart + 20, { align: 'center' });
   if (certificate.judgmentNumber) {
-      doc.setFontSize(11);
-      doc.setFont("courier", "bold");
-      doc.text(certificate.judgmentNumber, rightColumnX + 22.5, yStart + 26, { align: 'center' });
-      doc.setFont("times", "normal");
+    doc.setFontSize(11);
+    doc.setFont("courier", "bold");
+    doc.text(certificate.judgmentNumber, rightColumnX + 22.5, yStart + 26, { align: 'center' });
+    doc.setFont("times", "normal");
   }
   doc.line(rightColumnX, yStart + 28, w - MARGINS.right, yStart + 28);
-  
+
   doc.setFontSize(8);
   doc.text(`AN - ${jYear}`, rightColumnX + 22.5, yStart + 36, { align: 'center' });
 };
@@ -396,7 +396,7 @@ const drawJudgmentSection = (doc: jsPDF, w: number, certificate: BirthCertificat
  * Footer
  */
 const drawFooterSection = async (doc: jsPDF, w: number, h: number, certificate: BirthCertificate, center?: Center) => {
-  const yStart = 245; 
+  const yStart = 245;
   const midX = w / 2;
 
   doc.setLineWidth(0.4);
@@ -407,35 +407,35 @@ const drawFooterSection = async (doc: jsPDF, w: number, h: number, certificate: 
   doc.text("EXTRAIT DÉLIVRÉ PAR LE CENTRE DE", MARGINS.left + 5, yStart + 8);
   doc.setFont("times", "normal");
   doc.text(center?.name.toUpperCase() || "NON SPÉCIFIÉ", MARGINS.left + 5, yStart + 18);
-  
+
   doc.setFont("times", "bold");
   doc.text("POUR EXTRAIT CERTIFIÉ CONFORME", midX + 5, yStart + 8);
   doc.setFont("times", "normal");
-  
+
   const issuanceDate = certificate.signedAt ? new Date(certificate.signedAt) : new Date();
   const dayW = numberToFrenchWords(issuanceDate.getDate());
   const monthW = issuanceDate.toLocaleDateString('fr-FR', { month: 'long' }).toUpperCase();
   const yearW = numberToFrenchWords(issuanceDate.getFullYear());
   doc.text(`À ${center?.commune.toUpperCase() || "DAKAR"}, le ${dayW} ${monthW} ${yearW}`, midX + 5, yStart + 16);
-  
+
   doc.setFont("times", "bold");
-  doc.text("L'Officier de l'État Civil soussigné", midX + (w - MARGINS.right - midX)/2, yStart + 24, { align: 'center' });
+  doc.text("L'Officier de l'État Civil soussigné", midX + (w - MARGINS.right - midX) / 2, yStart + 24, { align: 'center' });
 
   if (certificate.status === CertificateStatus.SIGNED || certificate.status === CertificateStatus.DELIVERED) {
-     const stampX = midX + (w - MARGINS.right - midX) / 2;
-     const stampY = yStart + 42;
-     drawSecureStamp(doc, stampX, stampY, certificate);
-     
-     doc.setFont("times", "bold");
-     doc.setFontSize(11);
-     const officerName = certificate.signedBy?.split('(')[0].trim().toUpperCase() || "L'OFFICIER";
-     doc.text(officerName, stampX, h - MARGINS.bottom - 18, { align: 'center' });
+    const stampX = midX + (w - MARGINS.right - midX) / 2;
+    const stampY = yStart + 42;
+    drawSecureStamp(doc, stampX, stampY, certificate);
+
+    doc.setFont("times", "bold");
+    doc.setFontSize(11);
+    const officerName = certificate.signedBy?.split('(')[0].trim().toUpperCase() || "L'OFFICIER";
+    doc.text(officerName, stampX, h - MARGINS.bottom - 18, { align: 'center' });
   }
 
   try {
     const qrData = await QRCode.toDataURL(`https://etatcivil.sn/verify/${certificate.registrationNumber}`, { margin: 1, width: 80 });
     doc.addImage(qrData, 'PNG', MARGINS.left + 5, h - MARGINS.bottom - 28, 22, 22);
-  } catch(e) {}
+  } catch (e) { }
 
   doc.setFontSize(6.5);
   doc.text("(1) (2) (3) Notes et mentions marginales au verso", MARGINS.left + 30, h - MARGINS.bottom - 6);
@@ -443,40 +443,40 @@ const drawFooterSection = async (doc: jsPDF, w: number, h: number, certificate: 
 };
 
 const drawSecureStamp = (doc: jsPDF, centerX: number, centerY: number, certificate: BirthCertificate) => {
-    const radius = 22;
-    doc.saveGraphicsState();
-    doc.setTextColor(COLORS.blueStamp);
-    doc.setDrawColor(COLORS.blueStamp);
-    
-    doc.setLineWidth(0.8);
-    doc.circle(centerX, centerY, radius);
-    doc.setLineWidth(0.4);
-    doc.circle(centerX, centerY, radius - 1.5);
-    doc.setLineWidth(0.2);
-    doc.circle(centerX, centerY, radius - 4.5);
+  const radius = 22;
+  doc.saveGraphicsState();
+  doc.setTextColor(COLORS.blueStamp);
+  doc.setDrawColor(COLORS.blueStamp);
 
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(6);
-    doc.text("RÉPUBLIQUE DU SÉNÉGAL", centerX, centerY - 15, { align: 'center' });
-    
-    if (certificate.pkiSignature) {
-        doc.setFontSize(4);
-        doc.text("SIGNATURE QUALIFIÉE PKI", centerX, centerY - 11, { align: 'center' });
-        doc.setFontSize(3.5);
-        doc.text(certificate.pkiSignature.certificateId, centerX, centerY - 8.5, { align: 'center' });
-    }
+  doc.setLineWidth(0.8);
+  doc.circle(centerX, centerY, radius);
+  doc.setLineWidth(0.4);
+  doc.circle(centerX, centerY, radius - 1.5);
+  doc.setLineWidth(0.2);
+  doc.circle(centerX, centerY, radius - 4.5);
 
-    doc.setFontSize(16);
-    doc.text("★", centerX, centerY - 6, { align: 'center' });
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(6);
+  doc.text("RÉPUBLIQUE DU SÉNÉGAL", centerX, centerY - 15, { align: 'center' });
 
-    doc.setFontSize(13);
-    doc.setFont("times", "bold");
-    doc.text("OFFICIER", centerX, centerY + 2, { align: 'center' });
-    
-    doc.setLineWidth(0.6);
-    doc.line(centerX - 10, centerY + 4.5, centerX + 10, centerY + 4.5);
+  if (certificate.pkiSignature) {
+    doc.setFontSize(4);
+    doc.text("SIGNATURE QUALIFIÉE PKI", centerX, centerY - 11, { align: 'center' });
+    doc.setFontSize(3.5);
+    doc.text(certificate.pkiSignature.certificateId, centerX, centerY - 8.5, { align: 'center' });
+  }
 
-    doc.restoreGraphicsState();
+  doc.setFontSize(16);
+  doc.text("★", centerX, centerY - 6, { align: 'center' });
+
+  doc.setFontSize(13);
+  doc.setFont("times", "bold");
+  doc.text("OFFICIER", centerX, centerY + 2, { align: 'center' });
+
+  doc.setLineWidth(0.6);
+  doc.line(centerX - 10, centerY + 4.5, centerX + 10, centerY + 4.5);
+
+  doc.restoreGraphicsState();
 };
 
 export const generateCertificatePDF = async (certificate: BirthCertificate, center?: Center) => {

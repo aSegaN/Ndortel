@@ -1,3 +1,4 @@
+// frontend/views/Dashboard.tsx
 import React, { useMemo, useState } from 'react';
 import { useApp } from '../context/AppContext';
 import {

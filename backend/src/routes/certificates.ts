@@ -1,5 +1,5 @@
 // ============================================
-// FICHIER: server/src/routes/certificates.ts
+// FICHIER: backend/src/routes/certificates.ts
 // VERSION: 2.0.0 - SEC-003 Validation Zod
 // ============================================
 // Cette route gère les actes de naissance
@@ -12,8 +12,8 @@
 
 import { Router, Response } from 'express';
 import { validateBody, validateParams, validateQuery } from '../middleware/validate';
-import { 
-  createCertificateSchema, 
+import {
+  createCertificateSchema,
   updateCertificateSchema,
   signCertificateSchema,
   idParamSchema,
@@ -110,7 +110,7 @@ const authorizeRoles = (...roles: string[]) => {
 async function generateRegistrationNumber(centerId: string): Promise<string> {
   const pool = getPool();
   const year = new Date().getFullYear();
-  
+
   // Récupérer le code du centre
   const centerResult = await pool.query('SELECT code FROM centers WHERE id = $1', [centerId]);
   if (centerResult.rows.length === 0) {
@@ -124,10 +124,10 @@ async function generateRegistrationNumber(centerId: string): Promise<string> {
      WHERE center_id = $1 AND registration_year = $2`,
     [centerId, year]
   );
-  
+
   const count = parseInt(countResult.rows[0].count) + 1;
   const paddedCount = count.toString().padStart(5, '0');
-  
+
   return `${year}-${centerCode}-${paddedCount}`;
 }
 
@@ -136,26 +136,26 @@ async function generateRegistrationNumber(centerId: string): Promise<string> {
 // ============================================
 
 async function createAuditLog(
-  certificateId: string, 
-  action: string, 
-  performedBy: string, 
+  certificateId: string,
+  action: string,
+  performedBy: string,
   details?: string
 ): Promise<void> {
   const pool = getPool();
   const crypto = await import('crypto');
-  
+
   // Récupérer le dernier hash
   const lastLog = await pool.query(
     'SELECT hash FROM audit_logs WHERE certificate_id = $1 ORDER BY timestamp DESC LIMIT 1',
     [certificateId]
   );
-  
+
   const previousHash = lastLog.rows.length > 0 ? lastLog.rows[0].hash : '0';
-  
+
   // Créer le hash du nouveau log
   const logData = `${certificateId}|${action}|${performedBy}|${new Date().toISOString()}|${details || ''}|${previousHash}`;
   const hash = crypto.createHash('sha256').update(logData).digest('hex');
-  
+
   await pool.query(
     `INSERT INTO audit_logs (certificate_id, action, performed_by, details, hash, previous_hash)
      VALUES ($1, $2, $3, $4, $5, $6)`,
@@ -166,7 +166,7 @@ async function createAuditLog(
 // ============================================
 // GET ALL CERTIFICATES - VALIDÉ
 // ============================================
-router.get('/', 
+router.get('/',
   authenticate,
   validateQuery(searchSchema.merge(paginationSchema)),  // SEC-003
   async (req: any, res: Response) => {
@@ -275,7 +275,7 @@ router.get('/',
 // ============================================
 // GET SINGLE CERTIFICATE - VALIDÉ
 // ============================================
-router.get('/:id', 
+router.get('/:id',
   authenticate,
   validateParams(idParamSchema),  // SEC-003
   async (req: any, res: Response) => {
@@ -328,7 +328,7 @@ router.get('/:id',
 // ============================================
 // CREATE CERTIFICATE - VALIDÉ (CRITIQUE)
 // ============================================
-router.post('/', 
+router.post('/',
   authenticate,
   authorizeRoles('AGENT_SAISIE', 'ADMINISTRATEUR'),
   validateBody(createCertificateSchema),  // SEC-003: Validation complète
@@ -336,7 +336,7 @@ router.post('/',
     try {
       const pool = getPool();
       const user = req.user!;
-      
+
       // req.body est maintenant entièrement validé et sanitizé
       const data = req.body;
 
@@ -379,7 +379,7 @@ router.post('/',
         data.fatherBirthPlace, data.fatherAddress, data.fatherNin || null, data.fatherCniRecto || null, data.fatherCniVerso || null,
         data.motherFirstName, data.motherLastName, data.motherBirthDate, data.motherOccupation,
         data.motherBirthPlace, data.motherAddress, data.motherNin || null, data.motherCniRecto || null, data.motherCniVerso || null,
-        data.isLateRegistration, data.judgmentCourt || null, data.judgmentDate || null, 
+        data.isLateRegistration, data.judgmentCourt || null, data.judgmentDate || null,
         data.judgmentNumber || null, data.judgmentRegistrationDate || null
       ]);
 
@@ -404,7 +404,7 @@ router.post('/',
 // ============================================
 // UPDATE CERTIFICATE - VALIDÉ
 // ============================================
-router.put('/:id', 
+router.put('/:id',
   authenticate,
   authorizeRoles('AGENT_SAISIE', 'VALIDATEUR', 'ADMINISTRATEUR'),
   validateParams(idParamSchema),           // SEC-003
@@ -515,7 +515,7 @@ router.put('/:id',
 // ============================================
 // SUBMIT FOR VALIDATION
 // ============================================
-router.post('/:id/submit', 
+router.post('/:id/submit',
   authenticate,
   authorizeRoles('AGENT_SAISIE', 'ADMINISTRATEUR'),
   validateParams(idParamSchema),  // SEC-003
@@ -558,7 +558,7 @@ router.post('/:id/submit',
 // ============================================
 // SIGN CERTIFICATE - VALIDÉ
 // ============================================
-router.post('/:id/sign', 
+router.post('/:id/sign',
   authenticate,
   authorizeRoles('VALIDATEUR', 'RESPONSABLE', 'ADMINISTRATEUR'),
   validateParams(idParamSchema),           // SEC-003
@@ -596,9 +596,9 @@ router.post('/:id/sign',
       `, [user.id, JSON.stringify(signature), id]);
 
       await createAuditLog(
-        id, 
-        'SIGNATURE', 
-        user.id, 
+        id,
+        'SIGNATURE',
+        user.id,
         `Signé électroniquement par ${user.name} (${signature.algorithm})`
       );
 
@@ -613,7 +613,7 @@ router.post('/:id/sign',
 // ============================================
 // DELIVER CERTIFICATE
 // ============================================
-router.post('/:id/deliver', 
+router.post('/:id/deliver',
   authenticate,
   authorizeRoles('AGENT_SAISIE', 'RESPONSABLE', 'ADMINISTRATEUR'),
   validateParams(idParamSchema),  // SEC-003
@@ -666,7 +666,7 @@ function mapCertificateToResponse(row: any) {
     createdBy: row.created_by,
     createdByName: row.created_by_name,
     createdAt: row.created_at,
-    
+
     declarationDate: row.declaration_date,
     childFirstName: row.child_first_name,
     childLastName: row.child_last_name,
@@ -676,7 +676,7 @@ function mapCertificateToResponse(row: any) {
     birthPlace: row.birth_place,
     hospital: row.hospital,
     hospitalCertificateScan: row.hospital_certificate_scan,
-    
+
     fatherFirstName: row.father_first_name,
     fatherLastName: row.father_last_name,
     fatherBirthDate: row.father_birth_date,
@@ -686,7 +686,7 @@ function mapCertificateToResponse(row: any) {
     fatherNin: row.father_nin,
     fatherCniRecto: row.father_cni_recto,
     fatherCniVerso: row.father_cni_verso,
-    
+
     motherFirstName: row.mother_first_name,
     motherLastName: row.mother_last_name,
     motherBirthDate: row.mother_birth_date,
@@ -696,13 +696,13 @@ function mapCertificateToResponse(row: any) {
     motherNin: row.mother_nin,
     motherCniRecto: row.mother_cni_recto,
     motherCniVerso: row.mother_cni_verso,
-    
+
     isLateRegistration: row.is_late_registration,
     judgmentCourt: row.judgment_court,
     judgmentDate: row.judgment_date,
     judgmentNumber: row.judgment_number,
     judgmentRegistrationDate: row.judgment_registration_date,
-    
+
     signedBy: row.signed_by,
     signedByName: row.signed_by_name,
     signedAt: row.signed_at,

@@ -1,5 +1,5 @@
 // ============================================
-// FICHIER: server/src/validation/schemas.ts
+// FICHIER: backend/src/validation/schemas.ts
 // DESCRIPTION: Schémas de validation Zod
 // VERSION: 1.0.0 - SEC-003 Correction
 // ============================================
@@ -107,8 +107,8 @@ export const ninSchema = z
   .optional();
 
 // Genre
-export const genderSchema = z.enum(['M', 'F'], { 
-  errorMap: () => ({ message: 'Genre invalide (M ou F)' })
+export const genderSchema = z.enum(['M', 'F'], {
+  message: 'Genre invalide (M ou F)'
 });
 
 // Texte libre sécurisé (adresse, lieu, etc.)
@@ -175,7 +175,7 @@ export type LoginInput = z.infer<typeof loginSchema>;
 
 export const roleSchema = z.enum(
   ['ADMINISTRATEUR', 'AGENT_SAISIE', 'VALIDATEUR', 'RESPONSABLE'],
-  { errorMap: () => ({ message: 'Rôle invalide' }) }
+  { message: 'Rôle invalide' }
 );
 
 export const createUserSchema = z.object({
@@ -258,12 +258,17 @@ export type UpdateCenterInput = z.infer<typeof updateCenterSchema>;
 // SCHÉMAS CERTIFICATS DE NAISSANCE
 // ============================================
 
+// ============================================
+// SCHÉMAS CERTIFICATS DE NAISSANCE
+// ============================================
+
 export const certificateStatusSchema = z.enum(
   ['DRAFT', 'PENDING', 'SIGNED', 'DELIVERED'],
-  { errorMap: () => ({ message: 'Statut invalide' }) }
+  { message: 'Statut invalide' }
 );
 
-export const createCertificateSchema = z.object({
+// Schéma de base SANS refinement (pour pouvoir utiliser .partial())
+const certificateBaseSchema = z.object({
   // Informations enfant
   childFirstName: nameSchema,
   childLastName: nameSchema,
@@ -306,7 +311,10 @@ export const createCertificateSchema = z.object({
   judgmentDate: dateSchema.optional().nullable(),
   judgmentNumber: z.string().max(50).optional().nullable(),
   judgmentRegistrationDate: dateSchema.optional().nullable()
-}).refine(
+});
+
+// Schéma de CRÉATION avec refinement
+export const createCertificateSchema = certificateBaseSchema.refine(
   data => {
     // Si inscription tardive, les champs jugement sont requis
     if (data.isLateRegistration) {
@@ -314,13 +322,14 @@ export const createCertificateSchema = z.object({
     }
     return true;
   },
-  { 
+  {
     message: 'Pour une inscription tardive, les informations du jugement sont requises',
     path: ['judgmentCourt']
   }
 );
 
-export const updateCertificateSchema = createCertificateSchema.partial().extend({
+// Schéma de MISE À JOUR - basé sur le schéma SANS refinement
+export const updateCertificateSchema = certificateBaseSchema.partial().extend({
   status: certificateStatusSchema.optional()
 });
 
@@ -345,7 +354,7 @@ export type UpdateCertificateInput = z.infer<typeof updateCertificateSchema>;
 
 export const notificationTypeSchema = z.enum(
   ['info', 'success', 'warning', 'error'],
-  { errorMap: () => ({ message: 'Type de notification invalide' }) }
+  { message: 'Type de notification invalide' }
 );
 
 export const createNotificationSchema = z.object({
@@ -374,7 +383,7 @@ export type CreateNotificationInput = z.infer<typeof createNotificationSchema>;
 
 export const documentTypeSchema = z.enum(
   ['CNI_RECTO', 'CNI_VERSO', 'BULLETIN_HOSPITAL'],
-  { errorMap: () => ({ message: 'Type de document invalide' }) }
+  { message: 'Type de document invalide' }
 );
 
 export const ocrRequestSchema = z.object({
@@ -445,27 +454,27 @@ export type SearchInput = z.infer<typeof searchSchema>;
 export default {
   // Auth
   loginSchema,
-  
+
   // Users
   createUserSchema,
   updateUserSchema,
-  
+
   // Centers
   createCenterSchema,
   updateCenterSchema,
-  
+
   // Certificates
   createCertificateSchema,
   updateCertificateSchema,
   signCertificateSchema,
-  
+
   // Notifications
   createNotificationSchema,
-  
+
   // AI
   ocrRequestSchema,
   fraudCheckRequestSchema,
-  
+
   // Params
   idParamSchema,
   paginationSchema,

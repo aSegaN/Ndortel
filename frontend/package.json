@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.18",
-    "jspdf": "^3.0.4",
+    "jspdf": "^4.0.0",
     "lucide-react": "^0.562.0",
     "minio": "^8.0.6",
     "qrcode": "^1.5.3",
@@ -29,6 +29,7 @@
     "@types/node": "^22.14.0",
     "@vitejs/plugin-react": "^5.0.0",
     "cypress": "^15.8.1",
+    "terser": "^5.44.1",
     "typescript": "~5.8.2",
     "vite": "^6.2.0"
   }

@@ -3,7 +3,6 @@
   "version": "1.0.1",
   "description": "API Backend pour le Système National de Souveraineté de l'État Civil - NDORTEL",
   "main": "dist/index.js",
-  "type": "module",
   "scripts": {
     "dev": "nodemon --exec tsx src/index.ts",
     "build": "tsc",

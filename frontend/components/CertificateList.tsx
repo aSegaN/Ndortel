@@ -1,4 +1,4 @@
-
+// frontend/components/CertificateList.tsx
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { CertificateStatus, Role } from '../types';
@@ -17,10 +17,10 @@ interface CertificateListProps {
   onYearFilterChange?: (year: number | 'ALL') => void;
 }
 
-export const CertificateList: React.FC<CertificateListProps> = ({ 
-  onView, 
+export const CertificateList: React.FC<CertificateListProps> = ({
+  onView,
   onEdit,
-  onCreate, 
+  onCreate,
   externalStatusFilter = 'ALL',
   onStatusFilterChange,
   externalYearFilter = 'ALL',
@@ -33,11 +33,11 @@ export const CertificateList: React.FC<CertificateListProps> = ({
   const [currentPage, setCurrentPage] = useState(1);
   const user = authState.user;
   const isAdmin = user?.role === Role.ADMIN;
-  
+
   const statusFilter = externalStatusFilter;
-  const setStatusFilter = onStatusFilterChange || (() => {});
+  const setStatusFilter = onStatusFilterChange || (() => { });
   const yearFilter = externalYearFilter;
-  const setYearFilter = onYearFilterChange || (() => {});
+  const setYearFilter = onYearFilterChange || (() => { });
 
   const availableYears = useMemo(() => {
     const years = Array.from(new Set(certificates.map(c => c.registrationYear)));
@@ -45,8 +45,8 @@ export const CertificateList: React.FC<CertificateListProps> = ({
   }, [certificates]);
 
   const filteredCerts = useMemo(() => {
-    let result = (isAdmin 
-      ? certificates 
+    let result = (isAdmin
+      ? certificates
       : certificates.filter(c => c.centerId === user?.centerId));
 
     if (statusFilter !== 'ALL') {
@@ -70,7 +70,7 @@ export const CertificateList: React.FC<CertificateListProps> = ({
 
     if (searchTerm) {
       const lowerSearch = searchTerm.toLowerCase();
-      result = result.filter(c => 
+      result = result.filter(c =>
         c.registrationNumber.toLowerCase().includes(lowerSearch) ||
         c.childFirstName.toLowerCase().includes(lowerSearch) ||
         c.childLastName.toLowerCase().includes(lowerSearch)
@@ -104,7 +104,7 @@ export const CertificateList: React.FC<CertificateListProps> = ({
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="relative flex-1 min-w-[300px] max-w-xl">
               <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input 
+              <input
                 type="text"
                 placeholder="Rechercher par N° d'acte, Prénom ou Nom de l'enfant..."
                 className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
@@ -112,10 +112,10 @@ export const CertificateList: React.FC<CertificateListProps> = ({
                 onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
               />
             </div>
-            
+
             <div className="flex items-center space-x-3">
               {user?.role === Role.AGENT && (
-                <button 
+                <button
                   onClick={onCreate}
                   className="flex items-center space-x-2 px-6 py-3 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-all font-bold shadow-lg shadow-emerald-100"
                 >
@@ -132,7 +132,7 @@ export const CertificateList: React.FC<CertificateListProps> = ({
               <span className="text-[10px] font-black uppercase tracking-widest">Affiner :</span>
             </div>
 
-            <select 
+            <select
               className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-xs font-bold text-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
               value={yearFilter}
               onChange={(e) => { setYearFilter(e.target.value === 'ALL' ? 'ALL' : parseInt(e.target.value)); setCurrentPage(1); }}
@@ -143,7 +143,7 @@ export const CertificateList: React.FC<CertificateListProps> = ({
               ))}
             </select>
 
-            <select 
+            <select
               className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-xs font-bold text-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
               value={statusFilter}
               onChange={(e) => { setStatusFilter(e.target.value as any); setCurrentPage(1); }}
@@ -156,7 +156,7 @@ export const CertificateList: React.FC<CertificateListProps> = ({
 
             {isAdmin && (
               <div className="flex items-center space-x-2">
-                <select 
+                <select
                   className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-xs font-bold text-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
                   value={regionFilter}
                   onChange={(e) => { setRegionFilter(e.target.value); setCurrentPage(1); }}
@@ -169,7 +169,7 @@ export const CertificateList: React.FC<CertificateListProps> = ({
               </div>
             )}
 
-            <select 
+            <select
               className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-xs font-bold text-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
               value={typeFilter}
               onChange={(e) => { setTypeFilter(e.target.value as any); setCurrentPage(1); }}
@@ -180,7 +180,7 @@ export const CertificateList: React.FC<CertificateListProps> = ({
             </select>
 
             <div className="ml-auto text-xs font-bold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100">
-               {filteredCerts.length.toLocaleString()} Résultats
+              {filteredCerts.length.toLocaleString()} Résultats
             </div>
           </div>
         </div>
@@ -207,7 +207,7 @@ export const CertificateList: React.FC<CertificateListProps> = ({
                         <FileType size={48} />
                       </div>
                       <p className="text-gray-500 font-medium italic">Aucun acte ne correspond à votre recherche actuelle.</p>
-                      <button 
+                      <button
                         onClick={resetFilters}
                         className="text-emerald-600 font-bold text-xs uppercase hover:underline"
                       >
@@ -237,14 +237,14 @@ export const CertificateList: React.FC<CertificateListProps> = ({
                       <div className="text-[10px] font-bold text-gray-400 uppercase">{cert.childGender === 'M' ? 'Masculin' : 'Féminin'}</div>
                     </td>
                     <td className="px-6 py-4">
-                       <div className="text-sm font-medium text-gray-700">{new Date(cert.birthDate).toLocaleDateString('fr-FR')}</div>
+                      <div className="text-sm font-medium text-gray-700">{new Date(cert.birthDate).toLocaleDateString('fr-FR')}</div>
                     </td>
                     <td className="px-6 py-4 text-center">
-                       {cert.isLateRegistration ? (
-                         <span className="text-[9px] font-black bg-amber-50 text-amber-700 px-2 py-0.5 rounded border border-amber-100 uppercase tracking-tighter shadow-sm">JUGEMENT</span>
-                       ) : (
-                         <span className="text-[9px] font-black bg-blue-50 text-blue-700 px-2 py-0.5 rounded border border-blue-100 uppercase tracking-tighter shadow-sm">NORMAL</span>
-                       )}
+                      {cert.isLateRegistration ? (
+                        <span className="text-[9px] font-black bg-amber-50 text-amber-700 px-2 py-0.5 rounded border border-amber-100 uppercase tracking-tighter shadow-sm">JUGEMENT</span>
+                      ) : (
+                        <span className="text-[9px] font-black bg-blue-50 text-blue-700 px-2 py-0.5 rounded border border-blue-100 uppercase tracking-tighter shadow-sm">NORMAL</span>
+                      )}
                     </td>
                     <td className="px-6 py-4">
                       <span className={`inline-flex items-center space-x-1 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border shadow-sm ${STATUS_CONFIG[cert.status].color} border-current/10`}>
@@ -254,7 +254,7 @@ export const CertificateList: React.FC<CertificateListProps> = ({
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end space-x-2">
                         {cert.status === CertificateStatus.DRAFT && onEdit && user?.role === Role.AGENT && (
-                          <button 
+                          <button
                             onClick={() => onEdit(cert.id)}
                             className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
                             title="Modifier le brouillon"
@@ -262,7 +262,7 @@ export const CertificateList: React.FC<CertificateListProps> = ({
                             <Edit2 size={18} />
                           </button>
                         )}
-                        <button 
+                        <button
                           onClick={() => onView(cert.id)}
                           className="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all inline-flex items-center shadow-sm group-hover:scale-110"
                           title="Voir les détails"
@@ -285,32 +285,31 @@ export const CertificateList: React.FC<CertificateListProps> = ({
             Visualisation de <span className="font-bold text-gray-900">{(currentPage - 1) * ITEMS_PER_PAGE + 1}</span> à <span className="font-bold text-gray-900">{Math.min(currentPage * ITEMS_PER_PAGE, filteredCerts.length)}</span> sur <span className="font-bold text-gray-900">{filteredCerts.length.toLocaleString()}</span> résultats
           </div>
           <div className="flex items-center space-x-3">
-            <button 
+            <button
               disabled={currentPage === 1}
               onClick={() => handlePageChange(currentPage - 1)}
               className="p-2.5 rounded-xl border border-gray-100 hover:bg-gray-50 disabled:opacity-20 disabled:cursor-not-allowed transition-all text-gray-600 shadow-sm"
             >
               <ChevronLeft size={20} />
             </button>
-            
+
             <div className="flex items-center space-x-1.5">
               {[...Array(Math.min(5, totalPages))].map((_, i) => {
                 let pageNum = currentPage;
                 if (currentPage < 3) pageNum = i + 1;
                 else if (currentPage > totalPages - 2) pageNum = totalPages - 4 + i;
                 else pageNum = currentPage - 2 + i;
-                
+
                 if (pageNum <= 0 || pageNum > totalPages) return null;
 
                 return (
                   <button
                     key={pageNum}
                     onClick={() => handlePageChange(pageNum)}
-                    className={`w-10 h-10 rounded-xl text-sm font-black transition-all ${
-                      currentPage === pageNum 
-                        ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-100' 
+                    className={`w-10 h-10 rounded-xl text-sm font-black transition-all ${currentPage === pageNum
+                        ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-100'
                         : 'text-gray-400 hover:bg-gray-50 hover:text-gray-900'
-                    }`}
+                      }`}
                   >
                     {pageNum}
                   </button>
@@ -318,7 +317,7 @@ export const CertificateList: React.FC<CertificateListProps> = ({
               })}
             </div>
 
-            <button 
+            <button
               disabled={currentPage === totalPages}
               onClick={() => handlePageChange(currentPage + 1)}
               className="p-2.5 rounded-xl border border-gray-100 hover:bg-gray-50 disabled:opacity-20 disabled:cursor-not-allowed transition-all text-gray-600 shadow-sm"

@@ -1,5 +1,5 @@
 // ============================================
-// FICHIER: server/src/index.ts
+// FICHIER: backend/src/index.ts
 // VERSION: 3.1.0 - Routes corrigées
 // ============================================
 

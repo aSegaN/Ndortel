@@ -1,6 +1,6 @@
 // ============================================
-// FICHIER: server/src/routes/ai.ts
-// VERSION: 2.1.0 - SEC-003 Validation Zod
+// FICHIER: backend/src/routes/ai.ts
+// VERSION: 2.2.0 - SEC-003 Validation Zod + Fix TypeScript
 // ============================================
 // Proxy sécurisé pour l'API Gemini
 // - La clé API reste côté serveur (SEC-001)
@@ -21,6 +21,20 @@ const router = Router();
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.API_KEY;
 const GEMINI_MODEL = 'gemini-1.5-flash';
 const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+
+// ============================================
+// TYPES
+// ============================================
+
+interface GeminiResponse {
+  candidates?: Array<{
+    content?: {
+      parts?: Array<{
+        text?: string;
+      }>;
+    };
+  }>;
+}
 
 // ============================================
 // HELPERS
@@ -79,7 +93,7 @@ router.post('/ocr',
   async (req: Request, res: Response) => {
     try {
       if (!GEMINI_API_KEY) {
-        return res.status(503).json({ 
+        return res.status(503).json({
           error: 'Service OCR non configuré',
           message: 'La clé API Gemini n\'est pas configurée sur le serveur'
         });
@@ -173,14 +187,15 @@ Retournez UNIQUEMENT le JSON, sans texte supplémentaire.`;
       if (!response.ok) {
         const error = await response.text();
         console.error('Gemini API error:', error);
-        return res.status(502).json({ 
+        return res.status(502).json({
           error: 'Erreur du service OCR',
           details: 'Le service d\'analyse d\'image a rencontré une erreur'
         });
       }
 
-      const data = await response.json();
-      
+      // Type assertion pour éviter l'erreur TypeScript
+      const data = await response.json() as GeminiResponse;
+
       // Extraire le texte de la réponse
       const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
 
@@ -189,7 +204,7 @@ Retournez UNIQUEMENT le JSON, sans texte supplémentaire.`;
         // Nettoyer le texte (enlever les backticks markdown si présents)
         const cleanJson = text.replace(/```json\n?|\n?```/g, '').trim();
         const extracted = JSON.parse(cleanJson);
-        
+
         res.json({
           success: true,
           documentType,
@@ -223,7 +238,7 @@ router.post('/fraud-check',
   async (req: Request, res: Response) => {
     try {
       if (!GEMINI_API_KEY) {
-        return res.status(503).json({ 
+        return res.status(503).json({
           error: 'Service de vérification non configuré'
         });
       }
@@ -261,8 +276,8 @@ Retournez votre analyse au format JSON:
 Retournez UNIQUEMENT le JSON.`;
 
       // Préparer les images
-      const imageParts: any[] = [];
-      
+      const imageParts: Array<{ inline_data: { mime_type: string; data: string } }> = [];
+
       for (const [key, value] of Object.entries(documents)) {
         if (value && typeof value === 'string') {
           let imageData = value;
@@ -312,13 +327,14 @@ Retournez UNIQUEMENT le JSON.`;
         return res.status(502).json({ error: 'Erreur du service d\'analyse' });
       }
 
-      const data = await response.json();
+      // Type assertion pour éviter l'erreur TypeScript
+      const data = await response.json() as GeminiResponse;
       const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
 
       try {
         const cleanJson = text.replace(/```json\n?|\n?```/g, '').trim();
         const analysis = JSON.parse(cleanJson);
-        
+
         res.json({
           success: true,
           analysis: {

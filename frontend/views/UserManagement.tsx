@@ -1,15 +1,15 @@
-
+// frontend/views/UserManagement.tsx
 import React, { useState, useMemo, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { Role, User } from '../types';
-import { 
-  Users, 
-  Search, 
-  UserPlus, 
-  Shield, 
-  Building, 
-  MoreVertical, 
-  Mail, 
+import {
+  Users,
+  Search,
+  UserPlus,
+  Shield,
+  Building,
+  MoreVertical,
+  Mail,
   BadgeCheck,
   UserCheck,
   Lock,
@@ -52,12 +52,12 @@ export const UserManagement: React.FC = () => {
     special: /[^A-Za-z0-9]/.test(formData.password),
   }), [formData.password]);
 
-  const isPasswordValid = editingUser && !formData.password 
-    ? true 
+  const isPasswordValid = editingUser && !formData.password
+    ? true
     : Object.values(passwordCriteria).every(Boolean);
 
   const filteredUsers = useMemo(() => {
-    return users.filter(u => 
+    return users.filter(u =>
       u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       u.registrationNumber.toLowerCase().includes(searchTerm.toLowerCase())
@@ -70,7 +70,7 @@ export const UserManagement: React.FC = () => {
       setFormData({
         name: user.name,
         email: user.email,
-        password: '', 
+        password: '',
         role: user.role,
         centerId: user.centerId || '',
         birthDate: user.birthDate || '',
@@ -96,11 +96,11 @@ export const UserManagement: React.FC = () => {
       alert("Vous ne pouvez pas désactiver votre propre compte.");
       return;
     }
-    
-    const confirmMsg = user.active 
+
+    const confirmMsg = user.active
       ? `Êtes-vous sûr de vouloir désactiver le compte de ${user.name} ? L'utilisateur ne pourra plus se connecter.`
       : `Voulez-vous réactiver le compte de ${user.name} ?`;
-      
+
     if (window.confirm(confirmMsg)) {
       updateUser(user.id, { active: !user.active });
     }
@@ -141,7 +141,7 @@ export const UserManagement: React.FC = () => {
           <p className="text-slate-500 font-medium text-lg italic mt-1">Gestion des accès et habilitations des officiers d'état civil.</p>
         </div>
 
-        <button 
+        <button
           onClick={() => handleOpenModal()}
           className="flex items-center space-x-2 px-8 py-4 bg-[#064e3b] text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-[#043327] transition-all shadow-xl shadow-emerald-900/20"
         >
@@ -154,7 +154,7 @@ export const UserManagement: React.FC = () => {
         <div className="p-8 border-b border-slate-50 bg-slate-50/30">
           <div className="relative max-w-md">
             <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input 
+            <input
               type="text"
               placeholder="Rechercher un officier par nom, email ou matricule..."
               className="w-full pl-12 pr-4 py-3.5 bg-white border border-slate-100 rounded-2xl text-sm font-semibold focus:outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all"
@@ -216,14 +216,14 @@ export const UserManagement: React.FC = () => {
                   </td>
                   <td className="px-8 py-6 text-right">
                     <div className="flex items-center justify-end space-x-2">
-                      <button 
+                      <button
                         onClick={() => handleOpenModal(u)}
                         className="p-2 text-slate-300 hover:text-emerald-600 transition-colors"
                         title="Modifier"
                       >
                         <Edit2 size={18} />
                       </button>
-                      <button 
+                      <button
                         onClick={() => handleToggleStatus(u)}
                         className={`p-2 transition-colors ${u.active ? 'text-slate-300 hover:text-red-600' : 'text-red-600 hover:text-emerald-600'}`}
                         title={u.active ? 'Désactiver le compte' : 'Réactiver le compte'}
@@ -257,11 +257,11 @@ export const UserManagement: React.FC = () => {
               <div className="grid grid-cols-1 gap-6">
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nom complet</label>
-                  <input 
+                  <input
                     required
                     type="text"
                     value={formData.name}
-                    onChange={e => setFormData({...formData, name: e.target.value})}
+                    onChange={e => setFormData({ ...formData, name: e.target.value })}
                     className="w-full px-5 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-600 outline-none font-bold text-sm"
                     placeholder="Prénom et Nom"
                   />
@@ -272,11 +272,11 @@ export const UserManagement: React.FC = () => {
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Date de Naissance</label>
                     <div className="relative">
                       <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                      <input 
+                      <input
                         required
                         type="date"
                         value={formData.birthDate}
-                        onChange={e => setFormData({...formData, birthDate: e.target.value})}
+                        onChange={e => setFormData({ ...formData, birthDate: e.target.value })}
                         className="w-full pl-12 pr-5 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-600 outline-none font-bold text-sm"
                       />
                     </div>
@@ -285,11 +285,11 @@ export const UserManagement: React.FC = () => {
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Matricule Professionnel</label>
                     <div className="relative">
                       <Hash className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                      <input 
+                      <input
                         required
                         type="text"
                         value={formData.registrationNumber}
-                        onChange={e => setFormData({...formData, registrationNumber: e.target.value})}
+                        onChange={e => setFormData({ ...formData, registrationNumber: e.target.value })}
                         className="w-full pl-12 pr-5 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-600 outline-none font-bold text-sm"
                         placeholder="Ex: AGT-2025-001"
                       />
@@ -299,11 +299,11 @@ export const UserManagement: React.FC = () => {
 
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Adresse Email Professionnelle</label>
-                  <input 
+                  <input
                     required
                     type="email"
                     value={formData.email}
-                    onChange={e => setFormData({...formData, email: e.target.value})}
+                    onChange={e => setFormData({ ...formData, email: e.target.value })}
                     className="w-full px-5 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-600 outline-none font-bold text-sm"
                     placeholder="email@etatcivil.sn"
                   />
@@ -316,14 +316,13 @@ export const UserManagement: React.FC = () => {
                     </label>
                     <div className="relative">
                       <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                      <input 
+                      <input
                         required={!editingUser}
                         type="password"
                         value={formData.password}
-                        onChange={e => setFormData({...formData, password: e.target.value})}
-                        className={`w-full pl-12 pr-5 py-3.5 bg-slate-50 border rounded-2xl outline-none font-bold text-sm transition-all ${
-                          formData.password ? (isPasswordValid ? 'border-emerald-500 focus:ring-emerald-500/10' : 'border-amber-500 focus:ring-amber-500/10') : 'border-slate-100 focus:ring-emerald-500/10 focus:border-emerald-600'
-                        }`}
+                        onChange={e => setFormData({ ...formData, password: e.target.value })}
+                        className={`w-full pl-12 pr-5 py-3.5 bg-slate-50 border rounded-2xl outline-none font-bold text-sm transition-all ${formData.password ? (isPasswordValid ? 'border-emerald-500 focus:ring-emerald-500/10' : 'border-amber-500 focus:ring-amber-500/10') : 'border-slate-100 focus:ring-emerald-500/10 focus:border-emerald-600'
+                          }`}
                         placeholder="••••••••••••"
                       />
                     </div>
@@ -353,9 +352,9 @@ export const UserManagement: React.FC = () => {
                 <div className="grid grid-cols-2 gap-6">
                   <div className="space-y-1.5">
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Rôle</label>
-                    <select 
+                    <select
                       value={formData.role}
-                      onChange={e => setFormData({...formData, role: e.target.value as Role})}
+                      onChange={e => setFormData({ ...formData, role: e.target.value as Role })}
                       className="w-full px-5 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-sm appearance-none"
                     >
                       <option value={Role.AGENT}>Agent de saisie</option>
@@ -366,9 +365,9 @@ export const UserManagement: React.FC = () => {
 
                   <div className="space-y-1.5">
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Centre d'affectation</label>
-                    <select 
+                    <select
                       value={formData.centerId}
-                      onChange={e => setFormData({...formData, centerId: e.target.value})}
+                      onChange={e => setFormData({ ...formData, centerId: e.target.value })}
                       className="w-full px-5 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-sm appearance-none"
                     >
                       <option value="">Portail National</option>
@@ -381,19 +380,18 @@ export const UserManagement: React.FC = () => {
               </div>
 
               <div className="pt-6 border-t border-slate-100 flex justify-end space-x-4">
-                <button 
+                <button
                   type="button"
                   onClick={() => setShowModal(false)}
                   className="px-8 py-3.5 text-slate-400 font-black uppercase text-[10px] tracking-[0.2em] hover:bg-slate-50 rounded-2xl transition-all"
                 >
                   Annuler
                 </button>
-                <button 
+                <button
                   type="submit"
                   disabled={!isPasswordValid}
-                  className={`px-10 py-3.5 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl transition-all ${
-                    isPasswordValid ? 'bg-[#064e3b] shadow-emerald-900/20 hover:bg-[#043327]' : 'bg-slate-300 cursor-not-allowed shadow-none'
-                  }`}
+                  className={`px-10 py-3.5 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl transition-all ${isPasswordValid ? 'bg-[#064e3b] shadow-emerald-900/20 hover:bg-[#043327]' : 'bg-slate-300 cursor-not-allowed shadow-none'
+                    }`}
                 >
                   {editingUser ? 'Mettre à jour' : 'Enregistrer Officier'}
                 </button>
