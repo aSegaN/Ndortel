@@ -1,0 +1,84 @@
+# ============================================
+# NDORTEL - Dockerfile Frontend Development
+# Version: 1.0.0
+# Description: Image Docker pour le frontend React/Vite en mode développement
+# ============================================
+# Fonctionnalités:
+# - Hot Module Replacement (HMR) Vite
+# - TypeScript avec watch mode
+# - TailwindCSS JIT
+# ============================================
+
+FROM node:20-alpine
+
+# ============================================
+# MÉTADONNÉES
+# ============================================
+LABEL maintainer="NDORTEL Team <tech@ndortel.sn>"
+LABEL description="NDORTEL Frontend React - Development"
+LABEL version="1.0.0"
+
+# ============================================
+# VARIABLES D'ENVIRONNEMENT
+# ============================================
+ENV NODE_ENV=development
+ENV PORT=5173
+# Désactiver le polling Vite en mode Docker (utilise inotify)
+ENV CHOKIDAR_USEPOLLING=true
+
+# ============================================
+# INSTALLATION DES DÉPENDANCES SYSTÈME
+# ============================================
+RUN apk add --no-cache \
+    curl \
+    bash \
+    git \
+    && rm -rf /var/cache/apk/*
+
+# ============================================
+# CRÉATION DU RÉPERTOIRE DE TRAVAIL
+# ============================================
+WORKDIR /app
+
+# ============================================
+# COPIE DES FICHIERS DE DÉPENDANCES
+# ============================================
+COPY frontend/package*.json ./
+
+# ============================================
+# INSTALLATION DES DÉPENDANCES
+# ============================================
+RUN npm install --include=dev \
+    && npm cache clean --force
+
+# ============================================
+# COPIE DES FICHIERS DE CONFIGURATION
+# ============================================
+COPY frontend/vite.config.ts ./
+COPY frontend/tsconfig*.json ./
+COPY frontend/tailwind.config.js* ./
+COPY frontend/postcss.config.js* ./
+COPY frontend/index.html ./
+
+# ============================================
+# COPIE DU CODE SOURCE
+# ============================================
+COPY frontend/src ./src
+COPY frontend/public ./public
+
+# ============================================
+# EXPOSITION DU PORT
+# ============================================
+EXPOSE 5173
+
+# ============================================
+# HEALTHCHECK
+# ============================================
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost:5173 || exit 1
+
+# ============================================
+# COMMANDE DE DÉMARRAGE (DEV SERVER VITE)
+# ============================================
+# --host 0.0.0.0 permet l'accès depuis l'hôte Docker
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173"]

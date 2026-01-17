@@ -1,340 +1,411 @@
-# 🇸🇳 NDORTEL — Système de Gestion Numérique de l'État Civil
+# 🐳 NDORTEL - Configuration Docker pour le Développement
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Version-1.0.0-emerald?style=for-the-badge" alt="Version">
-  <img src="https://img.shields.io/badge/Sénégal-État%20Civil-green?style=for-the-badge" alt="Sénégal">
-  <img src="https://img.shields.io/badge/Sécurité-85%25-blue?style=for-the-badge" alt="Sécurité">
-  <img src="https://img.shields.io/badge/Conformité-CDP%202008--12-orange?style=for-the-badge" alt="Conformité CDP">
+  <img src="https://img.shields.io/badge/Docker-24.0+-blue?style=for-the-badge&logo=docker" alt="Docker">
+  <img src="https://img.shields.io/badge/PostgreSQL-15-336791?style=for-the-badge&logo=postgresql" alt="PostgreSQL">
+  <img src="https://img.shields.io/badge/Node.js-20+-339933?style=for-the-badge&logo=node.js" alt="Node.js">
+  <img src="https://img.shields.io/badge/MinIO-S3-red?style=for-the-badge&logo=minio" alt="MinIO">
 </p>
 
 ---
 
-## 📖 À propos
+## 📋 Table des Matières
 
-**NDORTEL** (« Le Commencement » en Wolof) est une plateforme souveraine de gestion numérique de l'état civil pour la République du Sénégal. Elle permet l'enregistrement, la validation et la délivrance des actes de naissance avec signature électronique qualifiée.
-
-### 🎯 Objectifs
-
-- **Identité juridique universelle** — Garantir à chaque enfant sénégalais un acte de naissance
-- **Souveraineté numérique** — Hébergement local et conformité aux lois sénégalaises
-- **Intégrité cryptographique** — Signature PKI et audit trail inviolable
-- **Détection de fraude** — IA Gindi (Google Gemini) pour l'analyse documentaire
+- [Prérequis](#-prérequis)
+- [Démarrage Rapide](#-démarrage-rapide)
+- [Architecture](#-architecture)
+- [Services Disponibles](#-services-disponibles)
+- [Configuration](#-configuration)
+- [Commandes Utiles](#-commandes-utiles)
+- [Développement](#-développement)
+- [Dépannage](#-dépannage)
 
 ---
 
-## 🏗️ Architecture
+## 🔧 Prérequis
+
+Avant de commencer, assurez-vous d'avoir installé:
+
+| Outil | Version Minimum | Vérification |
+|-------|-----------------|--------------|
+| Docker | 24.0+ | `docker --version` |
+| Docker Compose | 2.20+ | `docker compose version` |
+| Make (optionnel) | 4.0+ | `make --version` |
+
+### Installation Docker
+
+**macOS:**
+```bash
+brew install --cask docker
+```
+
+**Ubuntu/Debian:**
+```bash
+curl -fsSL https://get.docker.com | sh
+sudo usermod -aG docker $USER
+```
+
+**Windows:**
+Télécharger [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+
+---
+
+## 🚀 Démarrage Rapide
+
+### Option 1: Script Automatique (Recommandé)
+
+```bash
+# Rendre le script exécutable
+chmod +x start.sh
+
+# Démarrer l'environnement
+./start.sh
+
+# Avec tous les outils (Adminer, MailHog)
+./start.sh --full
+```
+
+### Option 2: Make
+
+```bash
+# Démarrer
+make up
+
+# Avec outils
+make up-tools
+
+# Voir l'aide
+make help
+```
+
+### Option 3: Docker Compose Direct
+
+```bash
+# Copier la configuration
+cp .env.docker.example .env
+
+# Construire et démarrer
+docker-compose -f docker-compose.dev.yml up -d --build
+
+# Avec outils additionnels
+docker-compose -f docker-compose.dev.yml --profile tools up -d
+```
+
+---
+
+## 🏗 Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                        NDORTEL Platform                          │
+│                     Réseau Docker: ndortel-network              │
 ├─────────────────────────────────────────────────────────────────┤
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐          │
-│  │   Frontend   │  │   Backend    │  │   Storage    │          │
-│  │  React/Vite  │◄─┤  Express.js  │◄─┤   MinIO S3   │          │
-│  │  TypeScript  │  │  TypeScript  │  │  AES-256-GCM │          │
-│  │  TailwindCSS │  │     Zod      │  │              │          │
-│  └──────────────┘  └──────────────┘  └──────────────┘          │
-│         │                 │                 │                   │
-│         └────────────────┼─────────────────┘                   │
-│                          ▼                                      │
-│              ┌──────────────────────┐                          │
-│              │     PostgreSQL       │                          │
-│              │   Base de données    │                          │
-│              └──────────────────────┘                          │
-├─────────────────────────────────────────────────────────────────┤
-│  Services externes:                                             │
-│  • Google Gemini (IA détection fraude)                         │
-│  • SENUM SA PKI (Signature qualifiée - à intégrer)             │
+│                                                                  │
+│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐      │
+│  │   Frontend   │    │   Backend    │    │  PostgreSQL  │      │
+│  │   (React)    │◄──►│  (Express)   │◄──►│     (15)     │      │
+│  │   :5173      │    │   :5005      │    │    :5432     │      │
+│  └──────────────┘    └──────────────┘    └──────────────┘      │
+│                              │                                   │
+│                              ▼                                   │
+│                      ┌──────────────┐                           │
+│                      │    MinIO     │                           │
+│                      │  (S3 Store)  │                           │
+│                      │  :9000/:9001 │                           │
+│                      └──────────────┘                           │
+│                                                                  │
+│  ┌──────────────────────── Optionnel ─────────────────────────┐│
+│  │  ┌──────────┐    ┌──────────┐                              ││
+│  │  │ Adminer  │    │ MailHog  │                              ││
+│  │  │  :8080   │    │  :8025   │                              ││
+│  │  └──────────┘    └──────────┘                              ││
+│  └────────────────────────────────────────────────────────────┘│
 └─────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 🛡️ Sécurité
+## 📦 Services Disponibles
 
-Le système a fait l'objet d'un **audit de sécurité complet** (Décembre 2024) avec remédiation des vulnérabilités identifiées.
+### Services Principaux
 
-| Mesure | Implémentation |
-|--------|----------------|
-| **Authentification** | JWT HS512 + bcrypt (12 rounds) |
-| **Chiffrement au repos** | AES-256-GCM (images biométriques) |
-| **Chiffrement en transit** | TLS 1.3 |
-| **Validation des entrées** | Zod sur toutes les routes API |
-| **Protection DoS** | Rate limiting (100 req/15min) |
-| **Journalisation** | Winston avec audit trail |
-| **Tests automatisés** | Jest (50+ tests unitaires) |
+| Service | Port | URL | Description |
+|---------|------|-----|-------------|
+| **Frontend** | 5173 | http://localhost:5173 | Application React/Vite |
+| **Backend** | 5005 | http://localhost:5005 | API Express.js |
+| **PostgreSQL** | 5432 | - | Base de données |
+| **MinIO** | 9000/9001 | http://localhost:9001 | Stockage S3 |
 
-### Score de sécurité
+### Services Optionnels (profile: tools)
 
-```
-Initial:  45/100 ████░░░░░░ CRITIQUE
-Actuel:   85/100 ████████░░ BON
-Cible:    93/100 █████████░ PRODUCTION
-```
+| Service | Port | URL | Description |
+|---------|------|-----|-------------|
+| **Adminer** | 8080 | http://localhost:8080 | Interface DB |
+| **MailHog** | 8025 | http://localhost:8025 | Capture emails |
 
 ---
 
-## ⚖️ Conformité Réglementaire
+## ⚙️ Configuration
 
-### Loi n° 2008-12 (Protection des Données Personnelles)
+### Variables d'Environnement
 
-- ✅ Registre des traitements (Art. 49)
-- ✅ Droits des personnes concernées (Art. 62, 68, 69)
-- ✅ API de gestion des consentements
-- ✅ Journalisation des accès aux données
-- ✅ Politique de confidentialité
-
-### Code de la Famille (Décret 65-422)
-
-- ✅ Numérotation conforme des actes
-- ✅ Mentions obligatoires
-- ✅ Workflow de validation hiérarchique
-
----
-
-## 🚀 Installation
-
-### Prérequis
-
-- Node.js 20+
-- PostgreSQL 15+
-- Docker & Docker Compose (pour MinIO)
-
-### 1. Cloner le dépôt
+Copiez `.env.docker.example` en `.env` et personnalisez:
 
 ```bash
-git clone https://github.com/votre-org/ndortel.git
-cd ndortel
+cp .env.docker.example .env
 ```
 
-### 2. Configuration de l'environnement
+#### Variables Principales
 
-```bash
-# Backend
-cp server/.env.example server/.env
-# Éditer server/.env avec vos valeurs
+```env
+# Base de données
+DB_NAME=ndortel
+DB_USER=ndortel
+DB_PASSWORD=ndortel_dev_2025
 
-# Variables requises:
-# - JWT_SECRET (min 32 caractères en production)
-# - DB_PASSWORD
-# - GEMINI_API_KEY
-# - MINIO_ACCESS_KEY / MINIO_SECRET_KEY
+# Sécurité JWT (CHANGER EN PRODUCTION!)
+JWT_SECRET=dev-secret-ndortel-change-in-production-minimum-64-chars-required
+
+# MinIO
+MINIO_ACCESS_KEY=ndortel-admin
+MINIO_SECRET_KEY=SecureMinioPass2025!
+
+# Google Gemini AI (optionnel)
+GEMINI_API_KEY=votre_cle_api
 ```
 
-### 3. Base de données
+### Identifiants par Défaut
 
-```bash
-# Créer la base
-createdb ndortel
-
-# Appliquer les migrations
-psql -U postgres -d ndortel -f server/migrations/001_initial_schema.sql
-psql -U postgres -d ndortel -f server/migrations/002_cdp_compliance_tables.sql
-```
-
-### 4. Stockage MinIO
-
-```bash
-docker-compose up -d minio
-```
-
-### 5. Démarrer les services
-
-```bash
-# Backend (port 5005)
-cd server
-npm install
-npm run dev
-
-# Frontend (port 3000)
-cd ../client
-npm install
-npm run dev
-```
-
-### 6. Accéder à l'application
-
-- **Frontend** : http://localhost:3000
-- **API** : http://localhost:5005
-- **Health check** : http://localhost:5005/health
-- **MinIO Console** : http://localhost:9001
+| Service | Identifiant | Mot de passe |
+|---------|-------------|--------------|
+| Application | admin@ndortel.sn | Admin@2025! |
+| PostgreSQL | ndortel | ndortel_dev_2025 |
+| MinIO | ndortel-admin | SecureMinioPass2025! |
 
 ---
 
-## 👥 Rôles Utilisateurs
+## 📋 Commandes Utiles
 
-| Rôle | Permissions |
-|------|-------------|
-| **AGENT_SAISIE** | Créer des actes, soumettre pour validation |
-| **VALIDATEUR** | Valider/rejeter, signer électroniquement |
-| **RESPONSABLE** | Superviser un centre, rapports |
-| **ADMINISTRATEUR** | Gestion complète, utilisateurs, centres |
+### Avec Make
 
----
+```bash
+# Services
+make up              # Démarrer
+make up-tools        # Démarrer avec outils
+make down            # Arrêter
+make restart         # Redémarrer
+make status          # État des services
 
-## 📁 Structure du Projet
+# Logs
+make logs            # Tous les logs
+make logs-backend    # Logs backend
+make logs-frontend   # Logs frontend
+make logs-db         # Logs PostgreSQL
 
+# Base de données
+make db-shell        # Console psql
+make db-backup       # Sauvegarder
+make db-reset        # Réinitialiser
+
+# Shells
+make backend-shell   # Shell backend
+make frontend-shell  # Shell frontend
+
+# Tests
+make test            # Tests backend
+make test-e2e        # Tests Cypress
+
+# Maintenance
+make clean           # Nettoyer
+make reset           # Réinitialisation complète
+make health          # Vérifier la santé
 ```
-ndortel/
-├── client/                    # Frontend React
-│   ├── src/
-│   │   ├── components/        # Composants réutilisables
-│   │   ├── context/           # AppContext (état global)
-│   │   ├── services/          # API client
-│   │   ├── views/             # Pages principales
-│   │   └── types.ts           # Types TypeScript
-│   └── vite.config.ts
-│
-├── server/                    # Backend Express
-│   ├── src/
-│   │   ├── config/            # Logger, sécurité
-│   │   ├── middleware/        # Auth, validation, logging
-│   │   ├── routes/            # Endpoints API
-│   │   ├── services/          # Logique métier, CDP
-│   │   └── index.ts           # Point d'entrée
-│   ├── migrations/            # Scripts SQL
-│   └── __tests__/             # Tests Jest
-│
-├── docker-compose.yml         # MinIO, Redis (optionnel)
-└── docs/                      # Documentation
-    ├── COMP-002-CDP/          # Conformité CDP
-    └── AUDIT-SECURITE.docx    # Rapport d'audit
+
+### Avec Docker Compose
+
+```bash
+# Démarrer
+docker-compose -f docker-compose.dev.yml up -d
+
+# Arrêter
+docker-compose -f docker-compose.dev.yml down
+
+# Logs
+docker-compose -f docker-compose.dev.yml logs -f backend
+
+# Shell
+docker-compose -f docker-compose.dev.yml exec backend sh
+
+# Rebuild
+docker-compose -f docker-compose.dev.yml up -d --build
 ```
 
 ---
 
-## 🔌 API Endpoints
+## 💻 Développement
 
-### Authentification
+### Structure des Dossiers
 
-| Méthode | Endpoint | Description |
-|---------|----------|-------------|
-| POST | `/api/auth/login` | Connexion |
-| GET | `/api/auth/me` | Utilisateur courant |
+```
+ndortel-docker/
+├── backend/                  # Code source backend
+│   ├── src/                  # Sources TypeScript
+│   └── package.json
+├── frontend/                 # Code source frontend
+│   ├── src/                  # Sources React
+│   └── package.json
+├── database/
+│   └── init/                 # Scripts SQL d'init
+│       └── 001_initial_schema.sql
+├── backups/                  # Sauvegardes DB
+├── docker-compose.dev.yml    # Orchestration
+├── Dockerfile.backend.dev    # Image backend
+├── Dockerfile.frontend.dev   # Image frontend
+├── .env.docker.example       # Template env
+├── .dockerignore            
+├── Makefile                  # Commandes
+├── start.sh                  # Script démarrage
+└── README.md
+```
 
-### Certificats
+### Hot Reload
 
-| Méthode | Endpoint | Description |
-|---------|----------|-------------|
-| GET | `/api/certificates` | Liste des actes |
-| POST | `/api/certificates` | Créer un acte |
-| PUT | `/api/certificates/:id` | Modifier un acte |
-| PATCH | `/api/certificates/:id/status` | Changer le statut |
+Le hot-reload est activé automatiquement:
 
-### Administration
+- **Frontend**: Vite HMR sur les modifications dans `frontend/src/`
+- **Backend**: Nodemon sur les modifications dans `backend/src/`
 
-| Méthode | Endpoint | Description |
-|---------|----------|-------------|
-| GET | `/api/users` | Liste des utilisateurs |
-| POST | `/api/users` | Créer un utilisateur |
-| GET | `/api/centers` | Liste des centres |
-| POST | `/api/centers` | Créer un centre |
+Les volumes Docker montent le code source, permettant les modifications en temps réel.
 
-### Conformité CDP
+### Debug Node.js
 
-| Méthode | Endpoint | Description |
-|---------|----------|-------------|
-| POST | `/api/cdp/requests` | Soumettre une demande de droits |
-| GET | `/api/cdp/requests/:id` | Consulter le statut |
-| POST | `/api/cdp/consents` | Enregistrer un consentement |
-| GET | `/api/admin/cdp/statistics` | Rapport CDP (admin) |
+Le port de debug `9229` est exposé. Configurez votre IDE:
 
----
+**VS Code** (`.vscode/launch.json`):
+```json
+{
+  "type": "node",
+  "request": "attach",
+  "name": "Docker: Attach to Node",
+  "port": 9229,
+  "address": "localhost",
+  "localRoot": "${workspaceFolder}/backend",
+  "remoteRoot": "/app",
+  "restart": true
+}
+```
 
-## 🧪 Tests
+### Tests
 
 ```bash
 # Tests unitaires backend
-cd server
-npm test
+make test
 
-# Tests avec couverture
-npm run test:coverage
+# Tests E2E Cypress
+make test-e2e
 
-# Tests E2E (Cypress)
-cd client
-npm run cypress:open
+# Avec couverture
+docker-compose -f docker-compose.dev.yml exec backend npm run test:coverage
 ```
 
 ---
 
-## 📊 Logs
+## 🔍 Dépannage
 
-Les logs sont stockés dans `server/logs/` avec rotation automatique :
+### Problèmes Courants
 
-| Fichier | Contenu | Rétention |
-|---------|---------|-----------|
-| `app-YYYY-MM-DD.log` | Logs applicatifs | 14 jours |
-| `http-YYYY-MM-DD.log` | Requêtes HTTP | 7 jours |
-| `audit-YYYY-MM-DD.log` | Actions sensibles | 90 jours |
-| `error-YYYY-MM-DD.log` | Erreurs | 30 jours |
+#### Le backend ne démarre pas
 
----
+```bash
+# Vérifier les logs
+make logs-backend
 
-## 🗺️ Roadmap
-
-### Phase 1 — MVP ✅
-- [x] Gestion des actes de naissance
-- [x] Authentification sécurisée
-- [x] Signature électronique (simulation)
-- [x] Détection de fraude IA
-
-### Phase 2 — Sécurité ✅
-- [x] Audit de sécurité complet
-- [x] Chiffrement des images
-- [x] Validation des entrées (Zod)
-- [x] Logging structuré (Winston)
-
-### Phase 3 — Conformité ✅
-- [x] Conformité CDP (Loi 2008-12)
-- [x] API droits des personnes
-- [x] Documentation juridique
-
-### Phase 4 — Production 🔜
-- [ ] Intégration PKI SENUM SA
-- [ ] Déploiement souverain (SENUM)
-- [ ] Audit de pénétration externe
-- [ ] Formation des agents
-
----
-
-## 🤝 Contribution
-
-1. Fork le projet
-2. Créer une branche (`git checkout -b feature/ma-fonctionnalite`)
-3. Commit (`git commit -m 'feat: ajout fonctionnalité X'`)
-4. Push (`git push origin feature/ma-fonctionnalite`)
-5. Ouvrir une Pull Request
-
-### Convention de commits
-
-```
-feat:     Nouvelle fonctionnalité
-fix:      Correction de bug
-security: Correction de sécurité
-docs:     Documentation
-refactor: Refactorisation
-test:     Ajout de tests
+# Causes possibles:
+# - PostgreSQL pas prêt → Attendre 30s
+# - Port 5005 déjà utilisé → Changer BACKEND_PORT dans .env
+# - Erreur de syntaxe → Vérifier les modifications récentes
 ```
 
+#### PostgreSQL ne se connecte pas
+
+```bash
+# Vérifier que le conteneur est actif
+docker-compose -f docker-compose.dev.yml ps postgres
+
+# Tester la connexion
+docker-compose -f docker-compose.dev.yml exec postgres pg_isready
+
+# Réinitialiser si corrompu
+make db-reset
+```
+
+#### Hot reload ne fonctionne pas
+
+```bash
+# macOS/Windows: Vérifier les ressources Docker Desktop
+# Allouer au moins 4GB de RAM
+
+# Linux: Vérifier inotify
+echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf
+sudo sysctl -p
+```
+
+#### Permission denied sur les volumes
+
+```bash
+# Linux: Ajuster les permissions
+sudo chown -R $USER:$USER ./backend ./frontend
+
+# Ou utiliser les user namespaces Docker
+```
+
+#### Ports déjà utilisés
+
+```bash
+# Identifier le processus
+lsof -i :5173
+lsof -i :5005
+
+# Changer les ports dans .env
+FRONTEND_PORT=3001
+BACKEND_PORT=5006
+```
+
+### Réinitialisation Complète
+
+Si tout échoue:
+
+```bash
+# Option 1: Via Make
+make reset
+
+# Option 2: Manuellement
+docker-compose -f docker-compose.dev.yml down -v --remove-orphans
+docker volume prune -f
+rm -f .env
+./start.sh
+```
+
+### Logs Détaillés
+
+```bash
+# Tous les logs avec timestamps
+docker-compose -f docker-compose.dev.yml logs -f --timestamps
+
+# Logs d'un service spécifique
+docker-compose -f docker-compose.dev.yml logs -f backend 2>&1 | tee backend.log
+```
+
 ---
 
-## 📜 Licence
+## 📞 Support
 
-Ce projet est sous licence propriétaire. Tous droits réservés.
-
-Développé pour la République du Sénégal 🇸🇳
-
----
-
-## 📞 Contact
-
-- **Équipe technique** : tech@ndortel.sn
-- **Support** : 800 00 221 (numéro vert)
-- **DPO** : dpo@ndortel.sn
+- **Documentation**: [README principal du projet]
+- **Issues**: Ouvrir une issue sur le dépôt
+- **Email**: tech@ndortel.sn
 
 ---
 
 <p align="center">
-  <strong>NDORTEL</strong> — L'acte qui fonde la citoyenneté, la technologie qui la protège.
+  <strong>NDORTEL</strong> - Système de Gestion Numérique de l'État Civil<br>
+  République du Sénégal 🇸🇳
 </p>

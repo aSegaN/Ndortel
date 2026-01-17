@@ -1,0 +1,101 @@
+# ============================================
+# NDORTEL - Dockerfile Backend Development
+# Version: 1.0.0
+# Description: Image Docker pour le backend Express.js en mode développement
+# ============================================
+# Fonctionnalités:
+# - Hot-reload avec nodemon/tsx
+# - Debug Node.js activé (port 9229)
+# - Toutes les dépendances dev incluses
+# ============================================
+
+FROM node:20-alpine
+
+# ============================================
+# MÉTADONNÉES
+# ============================================
+LABEL maintainer="NDORTEL Team <tech@ndortel.sn>"
+LABEL description="NDORTEL Backend API - Development"
+LABEL version="1.0.0"
+
+# ============================================
+# VARIABLES D'ENVIRONNEMENT
+# ============================================
+ENV NODE_ENV=development
+ENV PORT=5005
+ENV DEBUG_PORT=9229
+
+# ============================================
+# INSTALLATION DES DÉPENDANCES SYSTÈME
+# ============================================
+RUN apk add --no-cache \
+    curl \
+    bash \
+    git \
+    python3 \
+    make \
+    g++ \
+    # Pour bcrypt native compilation
+    && rm -rf /var/cache/apk/*
+
+# ============================================
+# CRÉATION DU RÉPERTOIRE DE TRAVAIL
+# ============================================
+WORKDIR /app
+
+# ============================================
+# COPIE DES FICHIERS DE DÉPENDANCES
+# ============================================
+COPY backend/package*.json ./
+
+# ============================================
+# INSTALLATION DES DÉPENDANCES
+# ============================================
+# Installation de toutes les dépendances (dev incluses)
+RUN npm install --include=dev \
+    && npm cache clean --force
+
+# ============================================
+# INSTALLATION GLOBALE DES OUTILS DE DEV
+# ============================================
+RUN npm install -g \
+    nodemon \
+    tsx \
+    typescript
+
+# ============================================
+# COPIE DU CODE SOURCE
+# ============================================
+COPY backend/src ./src
+COPY backend/tsconfig*.json ./
+
+# ============================================
+# CRÉATION DES RÉPERTOIRES NÉCESSAIRES
+# ============================================
+RUN mkdir -p /app/logs /app/uploads
+
+# ============================================
+# EXPOSITION DES PORTS
+# ============================================
+# Port API
+EXPOSE 5005
+# Port Debug Node.js
+EXPOSE 9229
+
+# ============================================
+# HEALTHCHECK
+# ============================================
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:5005/health || exit 1
+
+# ============================================
+# COMMANDE DE DÉMARRAGE (DEV AVEC HOT-RELOAD)
+# ============================================
+# Utilise nodemon pour le hot-reload automatique
+# --inspect permet le debugging
+CMD ["npx", "nodemon", "--exec", "node --inspect=0.0.0.0:9229 --loader", "tsx", "src/index.ts", \
+     "--watch", "src", \
+     "--ext", "ts,js,json", \
+     "--ignore", "node_modules/", \
+     "--ignore", "logs/", \
+     "--ignore", "*.test.ts"]
